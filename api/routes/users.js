@@ -64,6 +64,7 @@ router.post('/', (req, res, next) => {
         return y;
     });
     let user = users.find(x => x.username == username);
+    console.log(password)
     password = crypto.createHash('sha512').update(password).digest('hex');
     console.log(password);
     let didLog = users.find(x => x.password == password && x.username == username);
@@ -89,6 +90,7 @@ router.put('/', (req, res, next) => {
         'dateofbirth' in data &&
         'placeofbirth' in data && 'jmbg' in data && 'phone' in data && 'picture' in data)) {
         console.log('Data Missing!');
+        console.log(data)
         res.status(501).send({
             success: false,
             message: 'Required fields missing'
@@ -135,7 +137,7 @@ router.put('/', (req, res, next) => {
 
         requests.push(toWrite);
         fs.writeFileSync(FILES.REQUESTS, JSON.stringify(requests));
-        res.status(500).send({
+        res.status(200).send({
             success: true,
             message: 'Registration submitted!'
         });
