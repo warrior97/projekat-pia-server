@@ -53,7 +53,14 @@ router.get('/:username', (req, res, next) => {
 //Login logic
 router.post('/', (req, res, next) => {
     /*  Do stuff */
-
+    let testData=req.body;
+    if(!('username' in  testData && 'password' in  testData)){
+        res.status(500).send({
+            success:false,
+            message:'Invalid input data!'
+        })
+        return;
+    }
     let { username, password } = req.body;
     console.log(username, password);
 
@@ -64,11 +71,25 @@ router.post('/', (req, res, next) => {
         return y;
     });
     let user = users.find(x => x.username == username);
+    if (!user) {
+        res.status('404').send({
+            success: false,
+            message: 'User not found!'
+        })
+    }
     console.log(password)
     password = crypto.createHash('sha512').update(password).digest('hex');
     console.log(password);
     let didLog = users.find(x => x.password == password && x.username == username);
     let success = (user && didLog) ? true : false;
+    if(!success){
+        res.status(200).send({
+            success,
+            message: 'Bad login!',
+            user: undefined
+        })
+        return;
+    }
     let { password: password1, ...y } = user;
     res.send({
         success,
@@ -187,11 +208,39 @@ router.patch('/', (req, res, next) => {
     fs.writeFileSync(FILES.REQUESTS, JSON.stringify(requests));
 
     res.send({
-        success:true,
+        success: true,
         message: 'User updated succesfully!',
         username: username
     })
 
+})
+router.patch('/password', (req, res, next) => {
+    let data = req.body;
+    if (!('oldPassword' in data && 'username' in data && 'newPassword' in data)) {
+        res.status(507).send({ success: false, message: 'Invalid input data!' });
+        return;
+    }
+    let rawDataUsers = fs.readFileSync(FILES.USERS)
+    let users = JSON.parse(rawDataUsers);
+    let oldPass=crypto.createHash('sha512').update(data.oldPassword).digest('hex');
+    let obj =users.find(x=>{return x.username==data.username})
+    if(!obj){
+        res.status(506).send({ success: false, message: 'User not found!' });
+        return;
+    }
+    if(!obj.password==oldPass){
+        res.status(505).send({ success: false, message: 'Passwords do not match' });
+        return;
+    }
+    let newPass=crypto.createHash('sha512').update(data.newPassword).digest('hex');
+    obj.password=newPass;
+    //Vraca po referenci!?
+    fs.writeFileSync(FILES.USERS, JSON.stringify(users));
+    /*let found=users.find(x=>x.username==data.username)
+    console.log(found.password==obj.password);*/
+    res.send({success:true,
+        message:'Password change succesfull!'
+    })
 })
 
 module.exports = router;

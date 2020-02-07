@@ -66,10 +66,11 @@ router.put('/', (req, res, next) => {
 
     let rawDataSurveys = fs.readFileSync(FILES.SURVEYS)
     let surveys = JSON.parse(rawDataSurveys);
-
+    let datetime=new Date().getTime()/1000;
     let toWrite = {
         id: uuid4(),
-        ...data
+        ...data,
+        datetime
     };
 
 
